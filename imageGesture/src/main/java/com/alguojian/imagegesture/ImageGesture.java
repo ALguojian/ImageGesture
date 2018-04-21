@@ -132,7 +132,6 @@ public class ImageGesture extends AppCompatActivity {
 
             @Override
             public void destroyItem(ViewGroup container, int position, Object object) {
-                super.destroyItem(container, position, object);
                 container.removeView((View) object);
             }
         });

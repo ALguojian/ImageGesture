@@ -26,6 +26,15 @@ public class MainActivity extends AppCompatActivity {
 
         ArrayList<String> strings = new ArrayList<>();
         strings.add(gif);
+        strings.add(gif);
+        strings.add(gif);
+        strings.add(gif);
+        strings.add(gif);
+        strings.add(gif);
+        strings.add(gif);
+        strings.add(url);
+        strings.add(url);
+        strings.add(url);
         strings.add(url);
 
         ImageGesture.setDate(this,1,strings);

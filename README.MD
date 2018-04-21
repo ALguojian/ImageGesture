@@ -17,7 +17,7 @@ allprojects {
 Step 2. Add the dependency
 ```
 dependencies {
-            compile 'com.github.ALguojian:ImageGesture:1.1.1'
+            compile 'com.github.ALguojian:ImageGesture:2.0.0'
 	}
 ```
 
