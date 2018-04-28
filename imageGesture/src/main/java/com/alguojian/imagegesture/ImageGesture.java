@@ -92,14 +92,11 @@ public class ImageGesture extends AppCompatActivity {
 
         TextView down = findViewById(R.id.down);
 
-        down.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        down.setOnClickListener(v -> {
 
-                if (NoDoubleClickUtils.isDoubleClick(ImageGesture.this)) {
+            if (NoDoubleClickUtils.isDoubleClick(ImageGesture.this)) {
 
-                    downloadImage();
-                }
+                downloadImage();
             }
         });
 
@@ -118,6 +115,9 @@ public class ImageGesture extends AppCompatActivity {
             @Override
             public Object instantiateItem(ViewGroup container, int position) {
                 PhotoView photoView = new PhotoView(ImageGesture.this);
+
+                photoView.setClickable(true);
+                photoView.setOnClickListener(v -> finish());
 
                 photoView.enable();
                 photoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
