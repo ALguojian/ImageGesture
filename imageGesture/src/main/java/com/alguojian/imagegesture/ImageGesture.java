@@ -254,6 +254,7 @@ public class ImageGesture extends AppCompatActivity {
             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
 
                 loadingDialog.dismiss();
+                Toast.makeText(ImageGesture.this,"加载失败",Toast.LENGTH_SHORT).show();
 
                 if (null != e)
                     Log.d(KEY_TAG, e.getMessage());
