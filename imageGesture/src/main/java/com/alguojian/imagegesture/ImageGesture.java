@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -54,7 +55,6 @@ public class ImageGesture extends AppCompatActivity {
 
     private static final String KEY_LIST = "LIST";
     private static final String KEY_INDEX = "INDEX";
-
 
     /**
      * 表示当前页面的索引
@@ -216,14 +216,6 @@ public class ImageGesture extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
-        // 其次把文件插入到系统图库
-        try {
-            MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), fileName, null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        // 最后通知图库更新
         sendBroadcast(
                 new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + file.getAbsolutePath())));
 
