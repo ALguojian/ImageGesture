@@ -7,12 +7,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -27,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alguojian.aldialog.dialog.LoadingDialog;
 import com.alguojian.imagegesture.util.NoDoubleClickUtils;
 import com.alguojian.imagegesture.view.PhotoView;
 import com.bumptech.glide.Glide;
@@ -37,7 +36,6 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.guojian.aldialog.dialog.LoadingDialog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,12 +48,9 @@ import java.util.TreeMap;
 public class ImageGesture extends AppCompatActivity {
 
     private static final String KEY_TAG = "ImageGesture.this";
-
-    private List<String> list = new ArrayList<>();
-
     private static final String KEY_LIST = "LIST";
     private static final String KEY_INDEX = "INDEX";
-
+    private List<String> list = new ArrayList<>();
     /**
      * 表示当前页面的索引
      */
@@ -72,6 +67,20 @@ public class ImageGesture extends AppCompatActivity {
      */
     private TextView indicator;
 
+    /**
+     * 传递过来数组
+     *
+     * @param context 上下文对象
+     * @param positon 索引
+     * @param list    数组
+     */
+    public static void setDate(Context context, int positon, @NonNull List<String> list) {
+        Intent intent = new Intent(context, ImageGesture.class);
+        // 图片url,为了演示这里使用常量，一般从数据库中或网络中获取
+        intent.putStringArrayListExtra(KEY_LIST, (ArrayList<String>) list);
+        intent.putExtra(KEY_INDEX, positon);
+        context.startActivity(intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,12 +116,6 @@ public class ImageGesture extends AppCompatActivity {
             }
 
             @Override
-            public boolean isViewFromObject(View view, Object object) {
-
-                return view == object;
-            }
-
-            @Override
             public Object instantiateItem(ViewGroup container, int position) {
                 PhotoView photoView = new PhotoView(ImageGesture.this);
 
@@ -133,6 +136,12 @@ public class ImageGesture extends AppCompatActivity {
             @Override
             public void destroyItem(ViewGroup container, int position, Object object) {
                 container.removeView((View) object);
+            }
+
+            @Override
+            public boolean isViewFromObject(View view, Object object) {
+
+                return view == object;
             }
         });
 
@@ -159,7 +168,6 @@ public class ImageGesture extends AppCompatActivity {
         viewPager.setCurrentItem(getIntent().getIntExtra(KEY_INDEX, 0));
     }
 
-
     /**
      * 下载图片,之前先要判断是否含有本地读取权限（权限判断不适配所有）
      */
@@ -179,50 +187,6 @@ public class ImageGesture extends AppCompatActivity {
             saveImageToGallery(bitmaps.get(selectedIndex));
         }
     }
-
-    /**
-     * 本地保存图片bitmap对象，通知相册
-     *
-     * @param downloadImgBitmap
-     */
-    private void saveImageToGallery(Bitmap downloadImgBitmap) {
-
-
-        Toast.makeText(this, "正在下载中...", Toast.LENGTH_SHORT).show();
-
-        final String SAVE_PIC_PATH = Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)
-                ? Environment.getExternalStorageDirectory().getAbsolutePath()
-                : "/xiaodian/cache";//保存到SD卡
-
-        // 首先保存图片
-        File appDir = new File(SAVE_PIC_PATH + "/images/");
-        if (!appDir.exists()) {
-            appDir.mkdir();
-        }
-        long nowSystemTime = System.currentTimeMillis();
-        String fileName = nowSystemTime + ".png";
-        File file = new File(appDir, fileName);
-        try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileOutputStream fos = new FileOutputStream(file);
-            downloadImgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-            fos.flush();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        sendBroadcast(
-                new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + file.getAbsolutePath())));
-
-        Toast.makeText(this, "已保存到本地相册", Toast.LENGTH_SHORT).show();
-
-    }
-
 
     /**
      * 加载图片资源
@@ -246,7 +210,7 @@ public class ImageGesture extends AppCompatActivity {
             public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
 
                 loadingDialog.dismiss();
-                Toast.makeText(ImageGesture.this,"加载失败",Toast.LENGTH_SHORT).show();
+                Toast.makeText(ImageGesture.this, "加载失败", Toast.LENGTH_SHORT).show();
 
                 if (null != e)
                     Log.d(KEY_TAG, e.getMessage());
@@ -277,17 +241,45 @@ public class ImageGesture extends AppCompatActivity {
     }
 
     /**
-     * 传递过来数组
+     * 本地保存图片bitmap对象，通知相册
      *
-     * @param context 上下文对象
-     * @param positon 索引
-     * @param list    数组
+     * @param downloadImgBitmap
      */
-    public static void setDate(Context context, int positon, @NonNull List<String> list) {
-        Intent intent = new Intent(context, ImageGesture.class);
-        // 图片url,为了演示这里使用常量，一般从数据库中或网络中获取
-        intent.putStringArrayListExtra(KEY_LIST, (ArrayList<String>) list);
-        intent.putExtra(KEY_INDEX, positon);
-        context.startActivity(intent);
+    private void saveImageToGallery(Bitmap downloadImgBitmap) {
+
+
+        Toast.makeText(this, "正在下载中...", Toast.LENGTH_SHORT).show();
+
+        final String SAVE_PIC_PATH = Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)
+                ? Environment.getExternalStorageDirectory().getAbsolutePath()
+                : "/xiaodian/cache";//保存到SD卡
+
+        // 首先保存图片
+        File appDir = new File(SAVE_PIC_PATH + "/images/");
+        if (!appDir.exists()) {
+            appDir.mkdirs();
+        }
+        long nowSystemTime = System.currentTimeMillis();
+        String fileName = nowSystemTime + ".png";
+        File file = new File(appDir, fileName);
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(file);
+            downloadImgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        sendBroadcast(
+                new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + file.getAbsolutePath())));
+
+        Toast.makeText(this, "已保存到本地相册", Toast.LENGTH_SHORT).show();
+
     }
 }
