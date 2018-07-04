@@ -1,6 +1,8 @@
 ## 手势放大缩小图片
 
+最新版本如下：
 
+[![](https://jitpack.io/v/ALguojian/ImageGesture.svg)](https://jitpack.io/#ALguojian/ImageGesture)
 
 1.Add it in your root build.gradle at the end of repositories:
 
