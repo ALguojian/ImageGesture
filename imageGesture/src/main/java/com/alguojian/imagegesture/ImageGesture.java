@@ -1,7 +1,8 @@
 package com.alguojian.imagegesture;
 
 import android.Manifest;
-import android.content.Context;
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -45,12 +46,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
+/**
+ * 浏览图片，可以手势放大缩小，下载，
+ *
+ * @author alguojian
+ * @date 2018.05.05
+ */
 public class ImageGesture extends AppCompatActivity {
 
     private static final String KEY_TAG = "ImageGesture.this";
     private static final String KEY_LIST = "LIST";
+    private static final String KEY_NAME = "NAME";
     private static final String KEY_INDEX = "INDEX";
-    private List<String> list = new ArrayList<>();
+    private List<String> list = null;
+    private String name = null;
     /**
      * 表示当前页面的索引
      */
@@ -68,19 +77,66 @@ public class ImageGesture extends AppCompatActivity {
     private TextView indicator;
 
     /**
+     * 使用共享元素
+     *
+     * @param context
+     * @param url
+     * @param imageView
+     * @param name      共享元素的标签
+     */
+    public static void setDate(Activity context, @NonNull String url, ImageView imageView, String name) {
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add(url);
+        setDate(context, 0, strings, imageView, name);
+    }
+
+    /**
      * 传递过来数组
      *
-     * @param context 上下文对象
-     * @param positon 索引
-     * @param list    数组
+     * @param activity 上下文对象
+     * @param positon  索引
+     * @param url      数组
+     * @param name     共享元素
      */
-    public static void setDate(Context context, int positon, @NonNull List<String> list) {
-        Intent intent = new Intent(context, ImageGesture.class);
+    public static void setDate(Activity activity, int positon, @NonNull List<String> url, ImageView imageView, String name) {
+        Intent intent = new Intent(activity, ImageGesture.class);
         // 图片url,为了演示这里使用常量，一般从数据库中或网络中获取
-        intent.putStringArrayListExtra(KEY_LIST, (ArrayList<String>) list);
+        intent.putStringArrayListExtra(KEY_LIST, (ArrayList<String>) url);
+        intent.putExtra(KEY_NAME, name);
         intent.putExtra(KEY_INDEX, positon);
-        context.startActivity(intent);
+
+        if (name != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            activity.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(activity, imageView, name).toBundle());
+        } else {
+            activity.startActivity(intent);
+        }
+
+        activity.overridePendingTransition(R.anim.mine_activity_show, R.anim.mine_activity_hidden);
     }
+
+    /**
+     * 不使用共享元素，传递单张图片过来
+     *
+     * @param context
+     * @param url
+     */
+    public static void setDate(Activity context, @NonNull String url) {
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add(url);
+        setDate(context, 0, strings, null, null);
+    }
+
+
+    /**
+     * 不使用共享元素，传递多张图片过来
+     *
+     * @param context
+     * @param url
+     */
+    public static void setDate(Activity context, @NonNull List<String> url) {
+        setDate(context, 0, url, null, null);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +150,7 @@ public class ImageGesture extends AppCompatActivity {
         ViewPager viewPager = findViewById(R.id.viewPager);
 
         list = getIntent().getStringArrayListExtra(KEY_LIST);
+        name = getIntent().getStringExtra(KEY_NAME);
 
         indicator = findViewById(R.id.indicator);
 
@@ -123,8 +180,12 @@ public class ImageGesture extends AppCompatActivity {
                 photoView.setOnClickListener(v -> finish());
 
                 photoView.enable();
-                photoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
+                if (position == getIntent().getIntExtra(KEY_INDEX, 0) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (null != name)
+                        photoView.setTransitionName(name);
+                }
+                photoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
                 loadImage(position, photoView, list.get(position));
 
@@ -186,6 +247,12 @@ public class ImageGesture extends AppCompatActivity {
 
             saveImageToGallery(bitmaps.get(selectedIndex));
         }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(R.anim.mine_activity_show, R.anim.mine_activity_hidden);
     }
 
     /**
